@@ -1,0 +1,28 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".ActividadPrincipal">
+    <item
+        android:id="@+id/action_temas"
+        android:orderInCategory="100"
+        android:title="Suscripciones"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_send_event"
+        android:orderInCategory="101"
+        android:title="Enviar evento"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_share_photo"
+        android:orderInCategory="102"
+        android:title="Compartir foto cámara"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_error"
+        android:orderInCategory="103"
+        android:title="Error"
+        app:showAsAction="never" />
+</menu>

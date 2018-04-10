@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Eventos</string>
+
+    <string name="event_message">¡Disfruta este destino muy cerca de tí!</string>
+    <string name="event_show_more">Ver más</string>
+
+    <string name="com.crashlytics.useFirebaseAppId">true</string>
+
+</resources>

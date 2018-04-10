@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "208486211591",
+    "firebase_url": "https://eventos-a93da.firebaseio.com",
+    "project_id": "eventos-a93da",
+    "storage_bucket": "eventos-a93da.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:208486211591:android:720507c51baf7b1a",
+        "android_client_info": {
+          "package_name": "pe.sulca.eventos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "208486211591-f9slqidv8opfn4j8q2i7f29n51qmrd90.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "pe.sulca.eventos",
+            "certificate_hash": "4f1271a3bb3d4ef8cf984ad6c4734706da39cc88"
+          }
+        },
+        {
+          "client_id": "208486211591-gg8r73n62jael8vs82mv7fiik9a3drgr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCK2eWgsqIgHVDhmcJMVRl5Qd2wd3wB7BQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "208486211591-gg8r73n62jael8vs82mv7fiik9a3drgr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

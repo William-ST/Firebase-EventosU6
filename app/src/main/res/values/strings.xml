@@ -4,6 +4,15 @@
     <string name="event_message">¡Disfruta este destino muy cerca de tí!</string>
     <string name="event_show_more">Ver más</string>
 
+    <string name="invitation_title">
+Envio de una invitación de la app Eventos</string>
+    <string name="invitation_message">
+No te pierdas nunca más un evento interesante.</string>
+    <string name="invitation_deep_link"> https://principal.eventos-a93da.firebaseapp.com?descuento=15</string>
+    <string name="invitation_custom_image"> https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x 92dp.png
+</string>
+    <string name="invitation_cta">Instalar!!</string>
+
     <string name="com.crashlytics.useFirebaseAppId">true</string>
 
 </resources>

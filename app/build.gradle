@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'io.fabric'
+apply plugin: 'com.google.firebase.firebase-perf'
 
 android {
     compileSdkVersion 27
@@ -17,6 +18,16 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+
+    /*
+    applicationVariants.all {
+        FirebasePerformance {
+            instrumentationEnabled true
+        }
+    }
+    */
+
 }
 
 dependencies {
@@ -36,6 +47,9 @@ dependencies {
     implementation 'com.android.support:recyclerview-v7:27.0.2'
     implementation 'com.google.firebase:firebase-messaging:11.8.0'
     implementation 'com.google.firebase:firebase-storage:11.8.0'
+    implementation 'com.google.firebase:firebase-invites:11.8.0'
+    implementation 'com.google.firebase:firebase-config:11.8.0'
+    implementation 'com.google.firebase:firebase-perf:11.8.0'
 
     implementation 'com.google.http-client:google-http-client-gson:1.17.0-rc'
     implementation 'com.google.api-client:google-api-client-xml:1.17.0-rc'

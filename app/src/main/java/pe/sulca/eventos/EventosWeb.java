@@ -13,6 +13,8 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.JsResult;
@@ -24,6 +26,8 @@ import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import static pe.sulca.eventos.Comun.colorFondo;
+
 /**
  * Created by William_ST on 31/03/18.
  */
@@ -34,6 +38,7 @@ public class EventosWeb extends AppCompatActivity {
 
     WebView navegador;
     private String evento;
+    private double discount = 0;
     //private ProgressBar barraProgreso;
     ProgressDialog dialogo;
     final InterfazComunicacion miInterfazJava = new InterfazComunicacion(this);
@@ -53,7 +58,6 @@ public class EventosWeb extends AppCompatActivity {
 
         navegador.getSettings().setJavaScriptEnabled(true);
         navegador.getSettings().setBuiltInZoomControls(false);
-        navegador.setWebViewClient(new MyWebClient());
 
         navegador.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -73,6 +77,17 @@ public class EventosWeb extends AppCompatActivity {
         Bundle extras = getIntent().getExtras();
         evento = extras.getString("evento");
 
+        if (evento == null) {
+            android.net.Uri url = getIntent().getData();
+            Log.d(TAG, url.toString());
+            Log.d(TAG, url.getQuery().toString());
+            Log.d(TAG, url.getQueryParameterNames().toString());
+            evento = url.getQueryParameter("evento");
+            discount = Double.parseDouble(url.getQueryParameter("desc"));
+            Log.d(TAG, "discount: "+discount);
+        }
+
+        navegador.setWebViewClient(new MyWebClient());
     }
 
     public class MyWebClient extends WebViewClient {
@@ -93,7 +108,9 @@ public class EventosWeb extends AppCompatActivity {
         @Override
         public void onPageFinished(WebView view, String url) {
             dialogo.dismiss();
-            navegador.loadUrl("javascript:muestraEvento(\"" + evento + "\");");
+            navegador.loadUrl("javascript:colorFondo(\""+colorFondo+"\")");
+            Log.d(TAG, "call muestraEvento: "+discount);
+            navegador.loadUrl("javascript:muestraEvento(\""+evento+"\", "+discount+");");
         }
 
 
@@ -135,4 +152,20 @@ public class EventosWeb extends AppCompatActivity {
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.event_web_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.action_open:
+                navegador.loadUrl("https://us-central1-eventos-a93da.cloudfunctions.net/mostrarEventosHtml?evento="+evento);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 }

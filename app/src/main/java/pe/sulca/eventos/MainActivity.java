@@ -12,12 +12,14 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,6 +28,15 @@ import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.android.gms.appinvite.AppInvite;
+import com.google.android.gms.appinvite.AppInviteInvitation;
+import com.google.android.gms.appinvite.AppInviteInvitationResult;
+import com.google.android.gms.appinvite.AppInviteReferral;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException;
@@ -40,9 +51,12 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 import com.google.firebase.storage.FirebaseStorage;
 
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
@@ -50,13 +64,16 @@ import java.util.Date;
 
 import io.fabric.sdk.android.Fabric;
 
+import static pe.sulca.eventos.Comun.acercaDe;
+import static pe.sulca.eventos.Comun.colorFondo;
 import static pe.sulca.eventos.Comun.mFirebaseAnalytics;
+import static pe.sulca.eventos.Comun.mFirebaseRemoteConfig;
 import static pe.sulca.eventos.Comun.mostrarDialogo;
 import static pe.sulca.eventos.Comun.storage;
 import static pe.sulca.eventos.Comun.storageRef;
 import static pe.sulca.eventos.EventosFirestore.EVENTOS;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.OnConnectionFailedListener {
 
     private String TAG = MainActivity.class.getCanonicalName();
     private AdaptadorEventos adaptador;
@@ -74,12 +91,18 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler;
     private ProgressDialog dialogo;
 
+    private GoogleApiClient mGoogleApiClient;
+    private static final int REQUEST_INVITE = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         handler = new Handler(Looper.getMainLooper());
+
+        mGoogleApiClient = new GoogleApiClient.Builder(this).addApi(AppInvite.API)
+                .enableAutoManage(this, this).build();
 
         eventCollectionReference = FirebaseFirestore.getInstance().collection(EVENTOS);
 
@@ -132,10 +155,6 @@ public class MainActivity extends AppCompatActivity {
         servicio = obtenerServicioDrive(credencial);
 
         Log.d(TAG, "token: " + FirebaseInstanceId.getInstance().getToken());
-        Fabric.with(this, new Crashlytics());
-
-        Crashlytics.log(Log.VERBOSE, "screen", "MainActivity");
-        Crashlytics.setString("LOGIN_STATUS", "logged_out");
 
         /*
         only test
@@ -147,7 +166,82 @@ public class MainActivity extends AppCompatActivity {
             }
         }, 20000);
         */
+
+        boolean autoLaunchDeepLink = true;
+        AppInvite.AppInviteApi.getInvitation(mGoogleApiClient, this, autoLaunchDeepLink)
+                .setResultCallback(
+                        new ResultCallback<AppInviteInvitationResult>() {
+                            @Override
+                            public void onResult(AppInviteInvitationResult result) {
+                                if (result.getStatus().isSuccess()) {
+                                    Intent intent = result.getInvitationIntent();
+                                    String deepLink = AppInviteReferral.getDeepLink(intent);
+                                    String invitationId = AppInviteReferral
+                                            .getInvitationId(intent);
+                                    android.net.Uri url = Uri.parse(deepLink);
+
+                                    //Serio bueno manejar un type para manejar deeplink o invites
+                                    if (TextUtils.isEmpty(url.getQueryParameter("evento"))) {
+                                        String descuento = url.getQueryParameter("descuento");
+                                        mostrarDialogo(getApplicationContext(),
+                                                "Tienes un descuento del " + descuento + "% gracias a la invitación: " + invitationId);
+                                    }
+                                }
+                            }
+                        });
+
+        /*
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+
+        FirebaseRemoteConfigSettings configSettings = new FirebaseRemoteConfigSettings
+                .Builder()
+                .setDeveloperModeEnabled(BuildConfig.DEBUG)
+                .build();
+        mFirebaseRemoteConfig.setConfigSettings(configSettings);
+
+        mFirebaseRemoteConfig.setDefaults(R.xml.remote_config_default);
+
+        Log.d(TAG, "onCreate 1");
+        long cacheExpiration = 3600;
+
+        if (BuildConfig.DEBUG) {
+            cacheExpiration = 0;
+        }
+
+        mFirebaseRemoteConfig.fetch(cacheExpiration)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "onCreate e: onSuccess");
+                        mFirebaseRemoteConfig.activateFetched();
+                        getColorFondo();
+                        getAcercaDe();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        Log.d(TAG, "onCreate OnFailureListener: "+exception.getMessage());
+                        Log.d(TAG, "onCreate OnFailureListener: "+exception.getCause());
+                        Log.d(TAG, "onCreate OnFailureListener: "+exception.getLocalizedMessage());
+                        colorFondo = mFirebaseRemoteConfig.getString("color_fondo");
+                        acercaDe = mFirebaseRemoteConfig.getBoolean("acerca_de");
+                    }
+                });
+        */
     }
+
+    /*
+    private void getColorFondo() {
+        colorFondo = mFirebaseRemoteConfig.getString("color_fondo");
+    }
+
+    private void getAcercaDe() {
+        Log.d(TAG, "getAcercaDe 1");
+        acercaDe = mFirebaseRemoteConfig.getBoolean("acerca_de");
+        Log.d(TAG, "getAcercaDe 2: "+acercaDe);
+    }
+    */
 
     private static MainActivity current;
 
@@ -185,13 +279,6 @@ public class MainActivity extends AppCompatActivity {
             }
             extras = null;
         }
-        /*
-        Bundle extras = getIntent().getExtras();
-        if (getIntent().hasExtra("body")) {
-            mostrarDialogo(this, extras.getString("body"));
-            extras.remove("body");
-        }
-        */
     }
 
     @Override
@@ -221,9 +308,23 @@ public class MainActivity extends AppCompatActivity {
             Crashlytics.log(Log.VERBOSE, "onOptionsItemSelected", "action_error");
             Crashlytics.getInstance().crash();
             return true;
+        } else if (id == R.id.action_invitar) {
+            invitar();
         }
         return super.onOptionsItemSelected(item);
     }
+
+
+    private void invitar() {
+        Intent intent = new AppInviteInvitation.IntentBuilder(getString(R.string.invitation_title))
+                .setMessage(getString(R.string.invitation_message))
+                .setDeepLink(Uri.parse(getString(R.string.invitation_deep_link)))
+                .setCustomImage(Uri.parse(getString(R.string.invitation_custom_image)))
+                .setCallToActionText(getString(R.string.invitation_cta))
+                .build();
+        startActivityForResult(intent, REQUEST_INVITE);
+    }
+
 
     public static Context getAppContext() {
         return MainActivity.getCurrentContext();
@@ -254,10 +355,19 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
         switch (requestCode) {
             case REQUEST_TAKE_PHOTO:
                 if (resultCode == Activity.RESULT_OK) {
                     guardarFicheroEnDrive();
+                }
+                break;
+            case REQUEST_INVITE:
+                if (resultCode == RESULT_OK) {
+                    String[] ids = AppInviteInvitation.getInvitationIds(resultCode, data);
+                } else {
+                    Toast.makeText(this, "Error al enviar la invitación",
+                            Toast.LENGTH_LONG);
                 }
                 break;
         }
@@ -351,4 +461,8 @@ public class MainActivity extends AppCompatActivity {
         t.start();
     }
 
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Toast.makeText(this, "Error al enviar la invitación", Toast.LENGTH_LONG);
+    }
 }

@@ -15,4 +15,14 @@ No te pierdas nunca más un evento interesante.</string>
 
     <string name="com.crashlytics.useFirebaseAppId">true</string>
 
+
+    <string name="facebook_app_id">224873271399425</string>
+    <string name="fb_login_protocol_scheme">fb224873271399425</string>
+
+    <string name="com.twitter.sdk.android.CONSUMER_KEY">HJLCrA6xzldDGKA2sk2ZjYE2s</string>
+    <string name="com.twitter.sdk.android.CONSUMER_SECRET">1JSpcT4Ira5wiivQbfDpZm18xeG5vPmG6cAZyPk6p5BK5nPF1v</string>
+
+    <string name="CONSUMER_KEY">HJLCrA6xzldDGKA2sk2ZjYE2s</string>
+    <string name="CONSUMER_SECRET">1JSpcT4Ira5wiivQbfDpZm18xeG5vPmG6cAZyPk6p5BK5nPF1v</string>
+
 </resources>

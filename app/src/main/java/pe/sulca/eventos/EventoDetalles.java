@@ -16,13 +16,24 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
+import com.facebook.HttpMethod;
+import com.facebook.share.model.ShareLinkContent;
+import com.facebook.share.model.SharePhoto;
+import com.facebook.share.model.SharePhotoContent;
+import com.facebook.share.widget.ShareDialog;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -53,10 +64,22 @@ import static pe.sulca.eventos.Comun.acercaDe;
 import static pe.sulca.eventos.Comun.getStorageReference;
 import static pe.sulca.eventos.Comun.mFirebaseAnalytics;
 import static pe.sulca.eventos.Comun.mostrarDialogo;
+import static pe.sulca.eventos.Comun.shareDialog;
 import static pe.sulca.eventos.Comun.storageRef;
 
 import com.google.firebase.perf.FirebasePerformance;
 import com.google.firebase.perf.metrics.Trace;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.DefaultLogger;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.Twitter;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+import com.twitter.sdk.android.core.TwitterConfig;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.models.Tweet;
+import com.twitter.sdk.android.core.services.StatusesService;
+
+import retrofit2.Call;
 
 /**
  * Created by William_ST on 29/03/18.
@@ -72,6 +95,9 @@ public class EventoDetalles extends AppCompatActivity {
     ImageView imgImagen;
     String evento;
     CollectionReference registros;
+
+    EditText etComment;
+    Button btnSendCommentFacebook, btnSendCommentTwitter;
 
     final int SOLICITUD_SUBIR_PUTDATA = 0;
     final int SOLICITUD_SUBIR_PUTSTREAM = 1;
@@ -96,6 +122,9 @@ public class EventoDetalles extends AppCompatActivity {
         txtFecha = findViewById(R.id.txtFecha);
         txtCiudad = findViewById(R.id.txtCiudad);
         imgImagen = findViewById(R.id.imgImagen);
+        etComment = findViewById(R.id.et_comment);
+        btnSendCommentFacebook = findViewById(R.id.btn_send_comment_facebook);
+        btnSendCommentTwitter = findViewById(R.id.btn_send_comment_twitter);
 
         Bundle extras = getIntent().getExtras();
         evento = extras.getString("evento");
@@ -144,7 +173,75 @@ public class EventoDetalles extends AppCompatActivity {
 
         mTrace = FirebasePerformance.getInstance().newTrace("trace_EventoDetalles");
         //mTrace.start();
+        btnSendCommentFacebook.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (AccessToken.getCurrentAccessToken() != null) {
+                    final String comment = etComment.getText().toString();
+                    if (!TextUtils.isEmpty(comment)) {
+                        Bundle params = new Bundle();
+                        params.putString("message", comment);
+                    /* make the API call */
+                        new GraphRequest(
+                                AccessToken.getCurrentAccessToken(),
+                                "/me/comments",
+                                params,
+                                HttpMethod.POST,
+                                new GraphRequest.Callback() {
+                                    public void onCompleted(GraphResponse response) {
+                                    /* handle the result */
+                                        if (response.getError() == null) {
+                                            etComment.setText("");
+                                            Toast.makeText(getApplicationContext(), "¡Comentario realizado!", Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            Toast.makeText(getApplicationContext(), "¡Ha ocurrido un error!", Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                }
+                        ).executeAsync();
+                    }
+                } else {
+                    Toast.makeText(getApplicationContext(), "AccessToken.getCurrentAccessToken() == null", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
 
+        btnSendCommentTwitter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (AuthenticateUtil.isLoginTwitter()) {
+                    final String comment = etComment.getText().toString();
+                    if (!TextUtils.isEmpty(comment)) {
+                        // TODO : getApiClient reivew!
+                        StatusesService statusesService = AuthenticateUtil.getApiClientTwitter().getStatusesService();
+                        Call<Tweet> call = statusesService.update(comment, null,
+                                null, null, null, null,
+                                null, null, null);
+                        call.enqueue(new Callback<Tweet>() {
+                            @Override
+                            public void success(Result<Tweet> result) {
+                                Toast.makeText(getApplicationContext(), "Tweet publicado: " + result.response.message(), Toast.LENGTH_LONG).show();
+                            }
+
+                            @Override
+                            public void failure(TwitterException e) {
+                                Toast.makeText(getApplicationContext(), "No se pudo publicar el tweet: " +e.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
+                }
+            }
+        });
+
+        if (AccessToken.getCurrentAccessToken() != null) {
+            findViewById(R.id.ll_public).setVisibility(View.VISIBLE);
+            btnSendCommentFacebook.setVisibility(View.VISIBLE);
+            btnSendCommentTwitter.setVisibility(View.GONE);
+        } else if (AuthenticateUtil.isLoginTwitter()) {
+            findViewById(R.id.ll_public).setVisibility(View.VISIBLE);
+            btnSendCommentFacebook.setVisibility(View.GONE);
+            btnSendCommentTwitter.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -190,6 +287,18 @@ public class EventoDetalles extends AppCompatActivity {
         if (acercaDe != null && !acercaDe) {
             menu.removeItem(R.id.action_acercaDe);
         }
+
+        if (!ShareDialog.canShow(ShareLinkContent.class)) {
+            menu.removeItem(R.id.action_recommend_fb);
+        }
+
+        if (AccessToken.getCurrentAccessToken() == null) {
+            menu.removeItem(R.id.action_post_image_fb);
+            if (!ShareDialog.canShow(SharePhotoContent.class)) {
+                menu.removeItem(R.id.action_post_image_share_dialog);
+            }
+        }
+
         return true;
     }
 
@@ -246,8 +355,66 @@ public class EventoDetalles extends AppCompatActivity {
                         Toast.makeText(EventoDetalles.this, "Ha ocurrido un error", Toast.LENGTH_SHORT).show();
                     }
                 });
+                break;
+            case R.id.action_post_image_fb:
+                if (AccessToken.getCurrentAccessToken() != null) {
+                    Bundle params = new Bundle();
+                    imgImagen.setDrawingCacheEnabled(true);
+                    imgImagen.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                    imgImagen.layout(0, 0, imgImagen.getMeasuredWidth(), imgImagen.getMeasuredHeight());
+                    imgImagen.buildDrawingCache();
+                    Bitmap bitmap = imgImagen.getDrawingCache();
+                    //imgImagen.setDrawingCacheEnabled(false);
 
+                    if (bitmap == null) Log.e(TAG, "bitmap == null");
 
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+                    byte[] data = baos.toByteArray();
+
+                    params.putByteArray("multipart/form-data", data);
+
+                    params.putString("caption", "Nueva foto - " + evento);
+                    /* make the API call */
+                    new GraphRequest(
+                            AccessToken.getCurrentAccessToken(),
+                            "/me/photos",
+                            params,
+                            HttpMethod.POST,
+                            new GraphRequest.Callback() {
+                                public void onCompleted(GraphResponse response) {
+                                    /* handle the result */
+                                    Log.e("responseImagedata---", response.toString());
+                                    if (response.getError() == null) {
+                                        Toast.makeText(getApplicationContext(), "¡Foto publicada en facebook!", Toast.LENGTH_SHORT).show();
+                                    } else {
+                                        Toast.makeText(getApplicationContext(), "¡Ha ocurrido un error!", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            }
+                    ).executeAsync();
+                }
+
+                break;
+            case R.id.action_recommend_fb:
+                ShareLinkContent content = new ShareLinkContent.Builder()
+                        .setContentUrl(Uri.parse("https://us-central1-eventos-a93da.cloudfunctions.net/mostrarEventosHtml?evento=" + evento))
+                        .setContentDescription(evento + ", ¡vamos de viaje!").build();
+                shareDialog.show(content);
+                break;
+            case R.id.action_post_image_share_dialog:
+                imgImagen.setDrawingCacheEnabled(true);
+                imgImagen.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                        View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                imgImagen.layout(0, 0, imgImagen.getMeasuredWidth(), imgImagen.getMeasuredHeight());
+                imgImagen.buildDrawingCache();
+                SharePhoto photo = new SharePhoto.Builder()
+                        .setBitmap(imgImagen.getDrawingCache()).build();
+                //imgImagen.setDrawingCacheEnabled(false);
+                SharePhotoContent contentPhoto = new SharePhotoContent.Builder()
+                        .addPhoto(photo).build();
+                shareDialog.show(contentPhoto);
                 break;
         }
 
@@ -316,8 +483,13 @@ public class EventoDetalles extends AppCompatActivity {
             switch (opcion) {
                 case SOLICITUD_SUBIR_PUTDATA:
                     imgImagen.setDrawingCacheEnabled(true);
+                    imgImagen.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+                    imgImagen.layout(0, 0, imgImagen.getMeasuredWidth(), imgImagen.getMeasuredHeight());
                     imgImagen.buildDrawingCache();
                     Bitmap bitmap = imgImagen.getDrawingCache();
+                    //imgImagen.setDrawingCacheEnabled(false);
+
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
                     byte[] data = baos.toByteArray();

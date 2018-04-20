@@ -32,16 +32,48 @@
         android:layout_marginTop="24dp"
         android:gravity="center"/>
 
-    <Button
-        android:layout_below="@id/tv_message"
-        android:id="@+id/btn_start"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/ll_actions"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:background="@color/colorAccent"
-        android:text="Iniciar"
-        android:textColor="@android:color/white"
-        android:layout_centerHorizontal="true"
-        android:visibility="gone"/>
+        android:layout_below="@id/tv_message"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="32dp">
+
+        <Button
+            android:id="@+id/btn_start"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:background="@color/colorAccent"
+            android:text="Iniciar"
+            android:textColor="@android:color/white"
+            android:layout_centerHorizontal="true"
+            android:layout_marginRight="24dp"
+            android:layout_marginEnd="24dp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <com.facebook.login.widget.LoginButton
+                android:id="@+id/login_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal" />
+
+            <com.twitter.sdk.android.core.identity.TwitterLoginButton
+                android:id="@+id/twitter_login_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
 
 </RelativeLayout>

@@ -7,6 +7,7 @@ import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.facebook.share.widget.ShareDialog;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
@@ -34,6 +35,7 @@ public class Comun {
     static FirebaseRemoteConfig mFirebaseRemoteConfig;
     static String colorFondo;
     static Boolean acercaDe;
+    static ShareDialog shareDialog;
 
     static void mostrarDialogo(final Context context, final String mensaje) {
         Intent intent = new Intent(context, Dialogo.class);

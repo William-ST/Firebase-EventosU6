@@ -11,6 +11,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
     buildTypes {
         release {
@@ -63,6 +64,11 @@ dependencies {
 
     implementation 'com.google.firebase:firebase-core:11.8.0'
 
+    implementation 'com.facebook.android:facebook-login:[4,5)'
+    implementation 'com.facebook.android:facebook-share:[4,5)'
+
+    implementation 'com.twitter.sdk.android:twitter:3.1.1'
+    implementation 'com.squareup.retrofit:retrofit:1.9.0'
 
 }
 

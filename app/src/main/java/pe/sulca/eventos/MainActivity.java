@@ -27,6 +27,9 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
+import com.facebook.AccessToken;
+import com.facebook.login.LoginManager;
+import com.facebook.share.widget.ShareDialog;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.appinvite.AppInvite;
 import com.google.android.gms.appinvite.AppInviteInvitation;
@@ -69,6 +72,7 @@ import static pe.sulca.eventos.Comun.colorFondo;
 import static pe.sulca.eventos.Comun.mFirebaseAnalytics;
 import static pe.sulca.eventos.Comun.mFirebaseRemoteConfig;
 import static pe.sulca.eventos.Comun.mostrarDialogo;
+import static pe.sulca.eventos.Comun.shareDialog;
 import static pe.sulca.eventos.Comun.storage;
 import static pe.sulca.eventos.Comun.storageRef;
 import static pe.sulca.eventos.EventosFirestore.EVENTOS;
@@ -142,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.O
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://eventos-a93da.appspot.com");
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        shareDialog = new ShareDialog(this);
 
         String[] PERMISOS = {
                 android.Manifest.permission.WRITE_EXTERNAL_STORAGE,

@@ -27,32 +27,83 @@
             android:adjustViewBounds="true" />
     </RelativeLayout>
 
-    <RelativeLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="0.5">
 
-        <TextView
-            android:id="@+id/txtEvento"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <TextView
-            android:id="@+id/txtCiudad"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/txtEvento"
-            android:gravity="center" />
+            <TextView
+                android:id="@+id/txtEvento"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
 
-        <TextView
-            android:id="@+id/txtFecha"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/txtCiudad"
-            android:gravity="center"
-            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-            android:textStyle="italic" />
-    </RelativeLayout>
+            <TextView
+                android:id="@+id/txtCiudad"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/txtFecha"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                android:textStyle="italic" />
+
+            <LinearLayout
+                android:id="@+id/ll_public"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <EditText
+                    android:id="@+id/et_comment"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="right">
+
+                    <Button
+                        android:id="@+id/btn_send_comment_facebook"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@color/colorAccent"
+                        android:paddingLeft="20dp"
+                        android:paddingRight="20dp"
+                        android:text="Comentar"
+                        android:textColor="@android:color/white"
+                        android:visibility="gone"/>
+
+                    <Button
+                        android:id="@+id/btn_send_comment_twitter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@color/colorAccent"
+                        android:paddingLeft="20dp"
+                        android:paddingRight="20dp"
+                        android:text="Twittear"
+                        android:textColor="@android:color/white"
+                        android:visibility="gone"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </LinearLayout>

@@ -13,14 +13,31 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.crashlytics.android.Crashlytics;
+import com.facebook.AccessToken;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.login.LoginResult;
+import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.perf.FirebasePerformance;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
+import com.twitter.sdk.android.core.Callback;
+import com.twitter.sdk.android.core.DefaultLogger;
+import com.twitter.sdk.android.core.Result;
+import com.twitter.sdk.android.core.Twitter;
+import com.twitter.sdk.android.core.TwitterAuthConfig;
+import com.twitter.sdk.android.core.TwitterConfig;
+import com.twitter.sdk.android.core.TwitterException;
+import com.twitter.sdk.android.core.TwitterSession;
+import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 
 import io.fabric.sdk.android.Fabric;
 
@@ -35,23 +52,57 @@ public class SplashActivity extends AppCompatActivity {
 
     private final String TAG = SplashActivity.class.getCanonicalName();
 
+    LinearLayout llActions;
     TextView tvMessage;
     Button btnStart;
 
     Handler handler;
+    CallbackManager callbackManager;
+    LoginButton loginButton;
+
+    TwitterLoginButton botonLoginTwitter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        Twitter.initialize(new TwitterConfig.Builder(this)
+                .logger(new DefaultLogger(Log.DEBUG))
+                .twitterAuthConfig(new TwitterAuthConfig(getString(R.string.CONSUMER_KEY),
+                        getString(R.string.CONSUMER_SECRET)))
+                .debug(true)
+                .build());
+
         setContentView(R.layout.activity_splash);
+
         initializeGUI();
         initialize();
 
     }
 
     private void initializeGUI() {
+        llActions = findViewById(R.id.ll_actions);
         tvMessage = findViewById(R.id.tv_message);
         btnStart = findViewById(R.id.btn_start);
+        loginButton = findViewById(R.id.login_button);
+        //loginButton.setPublishPermissions("publish_actions");
+        loginButton.setReadPermissions("email");
+        loginButton.setReadPermissions("publish_actions");
+
+        //botonEnviarATwitter = findViewById(R.id.boton_EnviarATwitter);
+        botonLoginTwitter = findViewById(R.id.twitter_login_button);
+        botonLoginTwitter.setCallback(new Callback<TwitterSession>() {
+            @Override
+            public void success(Result<TwitterSession> result) {
+                Toast.makeText(SplashActivity.this, "Autenticado en twitter: " + result.data.getUserName(), Toast.LENGTH_LONG).show();
+                twitterAuth(result.data);
+            }
+
+            @Override
+            public void failure(TwitterException e) {
+                Toast.makeText(SplashActivity.this, "Fallo en autentificación: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
 
         btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -62,8 +113,13 @@ public class SplashActivity extends AppCompatActivity {
         });
     }
 
+    private void twitterAuth(TwitterSession session) {
+
+    }
+
     private void initialize() {
         handler = new Handler(Looper.getMainLooper());
+        callbackManager = CallbackManager.Factory.create();
 
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
 
@@ -100,6 +156,31 @@ public class SplashActivity extends AppCompatActivity {
                         processRemote();
                     }
                 });
+
+        // Callback registration
+        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                // App code
+                boolean loggedIn = AccessToken.getCurrentAccessToken() != null;
+                if (loggedIn) {
+                    startActivity(new Intent(SplashActivity.this, MainActivity.class));
+                    finish();
+                }
+            }
+
+            @Override
+            public void onCancel() {
+                // App code
+
+            }
+
+            @Override
+            public void onError(FacebookException exception) {
+                // App code
+
+            }
+        });
 
         showEnableReportCrashDialog();
     }
@@ -150,7 +231,7 @@ public class SplashActivity extends AppCompatActivity {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                btnStart.setVisibility(View.VISIBLE);
+                llActions.setVisibility(View.VISIBLE);
             }
         }, 1000);
     }
@@ -164,4 +245,13 @@ public class SplashActivity extends AppCompatActivity {
         acercaDe = mFirebaseRemoteConfig.getBoolean("acerca_de");
         Log.d(TAG, "getAcercaDe 2: " + acercaDe);
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d(TAG, data.toString());
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+        botonLoginTwitter.onActivityResult(requestCode, resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
 }

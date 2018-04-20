@@ -4,6 +4,24 @@
     tools:context="org.example.eventos.ActividadPrincipal">
 
     <item
+        android:id="@+id/action_post_image_share_dialog"
+        android:orderInCategory="97"
+        android:title="Foto ShareDialog FB"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_recommend_fb"
+        android:orderInCategory="98"
+        android:title="Recomendar en FB"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_post_image_fb"
+        android:orderInCategory="99"
+        android:title="Foto FB"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_putData"
         android:orderInCategory="100"
         android:title="Subir Imagen"
